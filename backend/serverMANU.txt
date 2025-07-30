@@ -1,0 +1,1235 @@
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const htmlToPdf = require('html-pdf');
+const AdmZip = require('adm-zip');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+/**
+ * Mapeamento ampliado dos tipos de seção para títulos formatados no PDF
+ */
+const sectionTitles = {
+  fiscal: 'Departamento Fiscal',
+  contabil: 'Departamento Contábil',
+  pessoal: 'Departamento Pessoal',
+  legalizacao: 'Departamento de Legalização',
+  controle: 'Departamento de Controle',
+  estudos: 'Departamento de Estudos Tributários',
+  financeiro: 'Departamento Financeiro',
+  atendimento: 'Departamento de Atendimento',
+  outros: 'Outros'
+};
+
+// Estrutura de armazenamento
+const formListFilePath = path.resolve(__dirname, 'formList.json');
+const formsDirectory = path.resolve(__dirname, 'forms');
+const logoDirectory = path.resolve(__dirname, 'assets');
+const pdfDirectory = path.resolve(__dirname, 'pdfs');
+
+/**
+ * Inicializa a estrutura de arquivos necessária para a aplicação
+ */
+try {
+  if (!fs.existsSync(formsDirectory)) {
+    fs.mkdirSync(formsDirectory, { recursive: true });
+    console.log(`Diretório de formulários criado em: ${formsDirectory}`);
+  }
+  
+  if (!fs.existsSync(logoDirectory)) {
+    fs.mkdirSync(logoDirectory, { recursive: true });
+    console.log(`Diretório de assets criado em: ${logoDirectory}`);
+  }
+  
+  if (!fs.existsSync(pdfDirectory)) {
+    fs.mkdirSync(pdfDirectory, { recursive: true });
+    console.log(`Diretório de PDFs criado em: ${pdfDirectory}`);
+  }
+  
+  // Verificar também se o arquivo de lista existe
+  if (!fs.existsSync(formListFilePath)) {
+    fs.writeFileSync(formListFilePath, JSON.stringify([]));
+    console.log(`Arquivo de lista de formulários criado em: ${formListFilePath}`);
+  }
+} catch (error) {
+  console.error('Erro ao criar diretórios ou arquivos necessários:', error);
+}
+
+/**
+ * Lê a lista de formulários do arquivo
+ * @returns {Array} Lista de formulários
+ */
+const readFormList = () => {
+  try {
+    if (!fs.existsSync(formListFilePath)) {
+      fs.writeFileSync(formListFilePath, JSON.stringify([]));
+      return [];
+    }
+    
+    const data = fs.readFileSync(formListFilePath, 'utf-8');
+    
+    if (!data || data.trim() === '') {
+      fs.writeFileSync(formListFilePath, JSON.stringify([]));
+      return [];
+    }
+    
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Erro ao ler lista de formulários:', error);
+    fs.writeFileSync(formListFilePath, JSON.stringify([]));
+    return [];
+  }
+};
+
+/**
+ * Salva a lista de formulários no arquivo
+ * @param {Array} formList - Lista de formulários
+ */
+const saveFormList = (formList) => {
+  fs.writeFileSync(formListFilePath, JSON.stringify(formList, null, 2));
+};
+
+/**
+ * Lê os dados de um formulário específico pelo ID
+ * @param {string} formId - ID do formulário
+ * @returns {Object} Dados do formulário
+ */
+const readFormData = (formId) => {
+  const formFilePath = path.resolve(formsDirectory, `${formId}.json`);
+  
+  if (!fs.existsSync(formFilePath)) {
+    // Inicializa o formulário com blocos contendo assunto e responsável
+    const defaultFormData = {
+      sectionsList: [
+        {
+          type: 'fiscal',
+          title: 'Fiscal',
+          blocks: [{ title: '', content: '', assunto: '', responsavel: '' }],
+          completed: false
+        },
+        {
+          type: 'pessoal',
+          title: 'Pessoal',
+          blocks: [{ title: '', content: '', assunto: '', responsavel: '' }],
+          completed: false
+        },
+        {
+          type: 'contabil',
+          title: 'Contábil',
+          blocks: [{ title: '', content: '', assunto: '', responsavel: '' }],
+          completed: false
+        }
+      ],
+      // Para compatibilidade com versão anterior
+      fiscal: { blocks: [{ title: '', content: '', assunto: '', responsavel: '' }], completed: false },
+      dp: { blocks: [{ title: '', content: '', assunto: '', responsavel: '' }], completed: false },
+      contabil: { blocks: [{ title: '', content: '', assunto: '', responsavel: '' }], completed: false },
+      headerData: {
+        empresa: '',
+        local: '',
+        data: '',
+        participantesEmpresa: '',
+        participantesContabilidade: 'Eli, Cataryna e William',
+      },
+      // NOVO: Adicionar campo pdfGerado inicializado como false
+      pdfGerado: false,
+      formInfo: {
+        // Informações Gerais da Empresa
+        nomeEmpresa: '',
+        cnpj: '',
+        endereco: '',
+        setorAtuacao: '',
+        porteEmpresa: '',
+        
+        // Estrutura Organizacional
+        numeroFuncionarios: '',
+        funcionarioIntermediario: '',
+        departamentos: ['', '', ''],
+        
+        // Motivação para a Mudança
+        razoesParaMudanca: [],
+        outrosMotivos: '',
+        expectativas: '',
+        
+        // Histórico Contábil
+        servicosAnteriores: [],
+        outrosServicos: '',
+
+        // Documentação e Processos (novos campos)
+        estadoDocumentos: '',
+        responsavelDocumentosNome: '',
+        responsavelDocumentosCargo: '',
+        pendenciasRelatorios: '',
+        temBalancoFechado: '',
+
+        // Financeiro
+        temParcelamentos: '',
+        parcelamentosDetalhes: [''],
+
+        // Controle
+        necessidadeControleCND: '',
+
+        // Fiscal
+        emiteNF: '',
+        quantidadeNotas: '',
+        mediaFaturamento: '',
+        temSistemaEmissao: '',
+        qualSistemaEmissao: '',
+
+        // Preferência de Comunicação
+        preferenciaComunicacao: [],
+
+        // Observações Gerais
+        observacoesGerais: ''
+      }
+    };
+    
+    fs.writeFileSync(formFilePath, JSON.stringify(defaultFormData, null, 2));
+    return JSON.parse(JSON.stringify(defaultFormData));
+  }
+  
+  try {
+    const data = fs.readFileSync(formFilePath, 'utf-8');
+    const parsedData = JSON.parse(data);
+    
+    // Certificar-se de que o campo pdfGerado existe
+    if (parsedData.pdfGerado === undefined) {
+      parsedData.pdfGerado = false;
+    }
+    
+    // Certifique-se de que o formInfo existe
+    if (!parsedData.formInfo) {
+      parsedData.formInfo = {
+        nomeEmpresa: '',
+        cnpj: '',
+        endereco: '',
+        setorAtuacao: '',
+        porteEmpresa: '',
+        numeroFuncionarios: '',
+        funcionarioIntermediario: '',
+        departamentos: ['', '', ''],
+        razoesParaMudanca: [],
+        outrosMotivos: '',
+        expectativas: '',
+        servicosAnteriores: [],
+        outrosServicos: '', 
+        // Novos campos para compatibilidade
+        estadoDocumentos: '',
+        responsavelDocumentosNome: '',
+        responsavelDocumentosCargo: '',
+        pendenciasRelatorios: '',
+        temBalancoFechado: '',
+
+        // Financeiro
+        temParcelamentos: '',
+        parcelamentosDetalhes: [''],
+
+        // Controle
+        necessidadeControleCND: '',
+
+        // Fiscal
+        emiteNF: '',
+        quantidadeNotas: '',
+        mediaFaturamento: '',
+        temSistemaEmissao: '',
+        qualSistemaEmissao: '',
+
+        // Preferência de Comunicação
+        preferenciaComunicacao: [],
+
+        // Observações Gerais
+        observacoesGerais: ''
+      };
+    }
+    
+    // Se for um formato antigo sem sectionsList, crie-o
+    if (!parsedData.sectionsList) {
+      parsedData.sectionsList = [];
+      
+      // Converter seções antigas para o novo formato
+      if (parsedData.fiscal) {
+        // Garantir que cada bloco tenha campos assunto e responsável
+        const fiscalBlocks = parsedData.fiscal.blocks.map(block => ({
+          ...block,
+          assunto: block.assunto || '',
+          responsavel: block.responsavel || ''
+        }));
+        
+        parsedData.sectionsList.push({
+          type: 'fiscal',
+          title: 'Fiscal',
+          blocks: fiscalBlocks,
+          completed: parsedData.fiscal.completed || false
+        });
+      }
+      
+      if (parsedData.dp) {
+        // Garantir que cada bloco tenha campos assunto e responsável
+        const dpBlocks = parsedData.dp.blocks.map(block => ({
+          ...block,
+          assunto: block.assunto || '',
+          responsavel: block.responsavel || ''
+        }));
+        
+        parsedData.sectionsList.push({
+          type: 'pessoal',
+          title: 'Pessoal',
+          blocks: dpBlocks,
+          completed: parsedData.dp.completed || false
+        });
+      }
+      
+      if (parsedData.contabil) {
+        // Garantir que cada bloco tenha campos assunto e responsável
+        const contabilBlocks = parsedData.contabil.blocks.map(block => ({
+          ...block,
+          assunto: block.assunto || '',
+          responsavel: block.responsavel || ''
+        }));
+        
+        parsedData.sectionsList.push({
+          type: 'contabil',
+          title: 'Contábil',
+          blocks: contabilBlocks,
+          completed: parsedData.contabil.completed || false
+        });
+      }
+      
+      // Se não houver nenhuma seção, adicione pelo menos uma
+      if (parsedData.sectionsList.length === 0) {
+        parsedData.sectionsList.push({
+          type: 'fiscal',
+          title: 'Fiscal',
+          blocks: [{ title: '', content: '', assunto: '', responsavel: '' }],
+          completed: false
+        });
+      }
+      
+      // Salve o formato atualizado
+      fs.writeFileSync(formFilePath, JSON.stringify(parsedData, null, 2));
+    } else {
+      // Garantir que todos os blocos em sectionsList tenham os campos assunto e responsável
+      parsedData.sectionsList = parsedData.sectionsList.map(section => {
+        const updatedBlocks = section.blocks.map(block => ({
+          ...block,
+          assunto: block.assunto || '',
+          responsavel: block.responsavel || ''
+        }));
+        
+        return {
+          ...section,
+          blocks: updatedBlocks
+        };
+      });
+    }
+    
+    // Garante que alterações feitas aos dados sejam salvas
+    fs.writeFileSync(formFilePath, JSON.stringify(parsedData, null, 2));
+    
+    return parsedData;
+  } catch (error) {
+    console.error(`Erro ao ler arquivo ${formId}.json:`, error);
+    // Em caso de erro, retorne um objeto padrão novo
+    return {
+      sectionsList: [
+        {
+          type: 'fiscal',
+          title: 'Fiscal',
+          blocks: [{ title: '', content: '', assunto: '', responsavel: '' }],
+          completed: false
+        }
+      ],
+      // Para compatibilidade
+      fiscal: { blocks: [{ title: '', content: '', assunto: '', responsavel: '' }], completed: false },
+      dp: { blocks: [{ title: '', content: '', assunto: '', responsavel: '' }], completed: false },
+      contabil: { blocks: [{ title: '', content: '', assunto: '', responsavel: '' }], completed: false },
+      headerData: {
+        empresa: '',
+        local: '',
+        data: '',
+        participantesEmpresa: '',
+        participantesContabilidade: 'Eli, Cataryna e William',
+      },
+      // NOVO: Inicializar pdfGerado como false
+      pdfGerado: false,
+      formInfo: {
+        nomeEmpresa: '',
+        cnpj: '',
+        endereco: '',
+        setorAtuacao: '',
+        porteEmpresa: '',
+        numeroFuncionarios: '',
+        funcionarioIntermediario: '',
+        departamentos: ['', '', ''],
+        razoesParaMudanca: [],
+        outrosMotivos: '',
+        expectativas: '',
+        servicosAnteriores: [],
+        outrosServicos: '',
+        // Novos campos para compatibilidade
+        estadoDocumentos: '',
+        responsavelDocumentosNome: '',
+        responsavelDocumentosCargo: '',
+        pendenciasRelatorios: '',
+        temBalancoFechado: '',
+
+        // Financeiro
+        temParcelamentos: '',
+        parcelamentosDetalhes: [''],
+
+        // Controle
+        necessidadeControleCND: '',
+
+        // Fiscal
+        emiteNF: '',
+        quantidadeNotas: '',
+        mediaFaturamento: '',
+        temSistemaEmissao: '',
+        qualSistemaEmissao: '',
+
+        // Preferência de Comunicação
+        preferenciaComunicacao: [],
+
+        // Observações Gerais
+        observacoesGerais: ''
+      }
+    };
+  }
+};
+
+/**
+ * Salva os dados de um formulário no arquivo
+ * @param {string} formId - ID do formulário
+ * @param {Object} formData - Dados do formulário
+ */
+const saveFormData = (formId, formData) => {
+  const formFilePath = path.resolve(formsDirectory, `${formId}.json`);
+  fs.writeFileSync(formFilePath, JSON.stringify(formData, null, 2));
+};
+
+/**
+ * Gera um arquivo PDF a partir dos dados das seções
+ * @param {Object} sections - Seções do formulário
+ * @param {Object} headerData - Dados do cabeçalho
+ * @param {string} filename - Nome do arquivo de saída
+ * @returns {Promise} Promessa com o resultado da geração
+ */
+const generatePDF = (sections, headerData, filename) => {
+  console.log('Gerando PDF...');
+
+  const htmlContent = generateHTML(sections, headerData);
+  
+  const options = {
+    format: 'A4',
+    border: {
+      top: '20mm',
+      right: '20mm',
+      bottom: '20mm',
+      left: '20mm'
+    }
+  };
+  
+  return new Promise((resolve, reject) => {
+    htmlToPdf.create(htmlContent, options).toFile(filename, (err, res) => {
+      if (err) {
+        console.error('Erro ao gerar PDF:', err);
+        reject(err);
+      } else {
+        console.log('PDF gerado com sucesso:', res);
+        resolve(res);
+      }
+    });
+  });
+};
+
+/**
+ * Formata uma data ISO para o formato DD-MM-YYYY
+ * @param {string} dateString - Data no formato ISO (YYYY-MM-DD)
+ * @returns {string} Data formatada
+ */
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const [year, month, day] = dateString.split('-');
+  return `${day}-${month}-${year}`;
+};
+
+/**
+ * Gera o HTML para o PDF a partir das seções e dados do cabeçalho
+ * @param {Object} sections - Seções do formulário
+ * @param {Object} headerData - Dados do cabeçalho
+ * @returns {string} Conteúdo HTML
+ */
+const generateHTML = (sections, headerData) => {
+  // Se headerData não for um objeto, inicialize como objeto vazio
+  if (!headerData || typeof headerData !== 'object') {
+    headerData = {};
+  }
+
+  // Logo da empresa codificado em Base64
+  // Substitua este Base64 pelo seu logo real
+  const logoBase64 = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAFOCAYAAABwh++ZAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAS1aVRYdFhNTDpjb20uYWRvYmUueG1wAAAAAAA8P3hwYWNrZXQgYmVnaW49J++7vycgaWQ9J1c1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCc/Pgo8eDp4bXBtZXRhIHhtbG5zOng9J2Fkb2JlOm5zOm1ldGEvJz4KPHJkZjpSREYgeG1sbnM6cmRmPSdodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjJz4KCiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0nJwogIHhtbG5zOkF0dHJpYj0naHR0cDovL25zLmF0dHJpYnV0aW9uLmNvbS9hZHMvMS4wLyc+CiAgPEF0dHJpYjpBZHM+CiAgIDxyZGY6U2VxPgogICAgPHJkZjpsaSByZGY6cGFyc2VUeXBlPSdSZXNvdXJjZSc+CiAgICAgPEF0dHJpYjpDcmVhdGVkPjIwMjUtMDQtMDc8L0F0dHJpYjpDcmVhdGVkPgogICAgIDxBdHRyaWI6RXh0SWQ+NDNmODE2ODctN2Q3Yy00NGNlLTlmMjYtYzEwMDhmYzdkZDMwPC9BdHRyaWI6RXh0SWQ+CiAgICAgPEF0dHJpYjpGYklkPjUyNTI2NTkxNDE3OTU4MDwvQXR0cmliOkZiSWQ+CiAgICAgPEF0dHJpYjpUb3VjaFR5cGU+MjwvQXR0cmliOlRvdWNoVHlwZT4KICAgIDwvcmRmOmxpPgogICA8L3JkZjpTZXE+CiAgPC9BdHRyaWI6QWRzPgogPC9yZGY6RGVzY3JpcHRpb24+CgogPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9JycKICB4bWxuczpkYz0naHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8nPgogIDxkYzp0aXRsZT4KICAgPHJkZjpBbHQ+CiAgICA8cmRmOmxpIHhtbDpsYW5nPSd4LWRlZmF1bHQnPkRlc2lnbiBzZW0gbm9tZSAtIDU8L3JkZjpsaT4KICAgPC9yZGY6QWx0PgogIDwvZGM6dGl0bGU+CiA8L3JkZjpE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`;
+
+  const cssStyles = `
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      font-size: 12px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+    }
+    .header img {
+      max-width: 150px;
+      margin-bottom: 10px;
+    }
+    .header h1 {
+      font-size: 16px;
+      margin: 0;
+      padding: 0;
+    }
+    .info {
+      margin-bottom: 20px;
+    }
+    .info p {
+      margin: 5px 0;
+    }
+    .section {
+      margin-bottom: 20px;
+      page-break-inside: avoid;
+    }
+    .section h2 {
+      font-size: 14px;
+      margin: 0 0 10px 0;
+      padding: 5px 10px;
+      background-color: #f5f5f5;
+      border-left: 3px solid #555;
+    }
+    .block {
+      margin-bottom: 15px;
+      padding: 0 10px;
+    }
+    .block h3 {
+      font-size: 13px;
+      margin: 0 0 5px 0;
+    }
+    .block p {
+      margin: 0;
+      line-height: 1.4;
+    }
+    .meta {
+      font-style: italic;
+      color: #777;
+      font-size: 11px;
+      margin-top: 5px;
+    }
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 10px;
+      color: #999;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+    }
+    .section-footer {
+      margin-top: 5px;
+      border-top: 1px dashed #ddd;
+      padding-top: 5px;
+      font-style: italic;
+      font-size: 11px;
+    }
+    .empty-block {
+      color: #999;
+      font-style: italic;
+    }
+  `;
+
+  // Gerar o HTML
+  let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Relatório de Atendimento</title>
+      <style>${cssStyles}</style>
+    </head>
+    <body>
+      <div class="header">
+        <img src="${logoBase64}" alt="Logo da Empresa">
+        <h1>RELATÓRIO DE ATENDIMENTO</h1>
+      </div>
+      
+      <div class="info">
+        <p><strong>Empresa:</strong> ${headerData.empresa || ''}</p>
+        <p><strong>Local:</strong> ${headerData.local || ''}</p>
+        <p><strong>Data:</strong> ${formatDate(headerData.data) || ''}</p>
+        <p><strong>Participantes da Empresa:</strong> ${headerData.participantesEmpresa || ''}</p>
+        <p><strong>Participantes da Contabilidade:</strong> ${headerData.participantesContabilidade || ''}</p>
+      </div>
+  `;
+
+  // Verificar se temos seções
+  if (sections && sections.sectionsList && sections.sectionsList.length > 0) {
+    // Iterar pelas seções na nova estrutura
+    html += `<div class="sections">`;
+    
+    sections.sectionsList.forEach(section => {
+      // Verificar se a seção tem blocos e se está marcada como concluída
+      if (section.blocks && section.blocks.length > 0) {
+        const sectionTitle = sectionTitles[section.type] || section.title;
+        
+        html += `
+          <div class="section">
+            <h2>${sectionTitle}</h2>
+        `;
+        
+        let hasContent = false;
+        
+        section.blocks.forEach(block => {
+          if (block.title || block.content) {
+            hasContent = true;
+            html += `
+              <div class="block">
+                ${block.title ? `<h3>${block.title}</h3>` : ''}
+                ${block.content ? `<p>${block.content}</p>` : ''}
+                ${(block.assunto || block.responsavel) ? 
+                  `<div class="meta">
+                    ${block.assunto ? `<span>Assunto: ${block.assunto}</span>` : ''}
+                    ${block.assunto && block.responsavel ? ' | ' : ''}
+                    ${block.responsavel ? `<span>Responsável: ${block.responsavel}</span>` : ''}
+                  </div>` : ''}
+              </div>
+            `;
+          }
+        });
+        
+        if (!hasContent) {
+          html += `<div class="empty-block">Nenhuma informação cadastrada nesta seção.</div>`;
+        }
+        
+        html += `
+          ${section.completed ? `<div class="section-footer">Seção concluída</div>` : ''}
+          </div>
+        `;
+      }
+    });
+    
+    html += `</div>`;
+  } else if (sections.fiscal || sections.dp || sections.contabil) {
+    // Compatibilidade com formato antigo
+    html += `<div class="sections">`;
+    
+    // Processar seção fiscal
+    if (sections.fiscal && sections.fiscal.blocks && sections.fiscal.blocks.length > 0) {
+      html += `
+        <div class="section">
+          <h2>Departamento Fiscal</h2>
+      `;
+      
+      let hasContent = false;
+      
+      sections.fiscal.blocks.forEach(block => {
+        if (block.title || block.content) {
+          hasContent = true;
+          html += `
+            <div class="block">
+              ${block.title ? `<h3>${block.title}</h3>` : ''}
+              ${block.content ? `<p>${block.content}</p>` : ''}
+              ${(block.assunto || block.responsavel) ? 
+                `<div class="meta">
+                  ${block.assunto ? `<span>Assunto: ${block.assunto}</span>` : ''}
+                  ${block.assunto && block.responsavel ? ' | ' : ''}
+                  ${block.responsavel ? `<span>Responsável: ${block.responsavel}</span>` : ''}
+                </div>` : ''}
+            </div>
+          `;
+        }
+      });
+      
+      if (!hasContent) {
+        html += `<div class="empty-block">Nenhuma informação cadastrada nesta seção.</div>`;
+      }
+      
+      html += `
+        ${sections.fiscal.completed ? `<div class="section-footer">Seção concluída</div>` : ''}
+        </div>
+      `;
+    }
+    
+    // Processar seção pessoal
+    if (sections.dp && sections.dp.blocks && sections.dp.blocks.length > 0) {
+      html += `
+        <div class="section">
+          <h2>Departamento Pessoal</h2>
+      `;
+      
+      let hasContent = false;
+      
+      sections.dp.blocks.forEach(block => {
+        if (block.title || block.content) {
+          hasContent = true;
+          html += `
+            <div class="block">
+              ${block.title ? `<h3>${block.title}</h3>` : ''}
+              ${block.content ? `<p>${block.content}</p>` : ''}
+              ${(block.assunto || block.responsavel) ? 
+                `<div class="meta">
+                  ${block.assunto ? `<span>Assunto: ${block.assunto}</span>` : ''}
+                  ${block.assunto && block.responsavel ? ' | ' : ''}
+                  ${block.responsavel ? `<span>Responsável: ${block.responsavel}</span>` : ''}
+                </div>` : ''}
+            </div>
+          `;
+        }
+      });
+      
+      if (!hasContent) {
+        html += `<div class="empty-block">Nenhuma informação cadastrada nesta seção.</div>`;
+      }
+      
+      html += `
+        ${sections.dp.completed ? `<div class="section-footer">Seção concluída</div>` : ''}
+        </div>
+      `;
+    }
+    
+    // Processar seção contábil
+    if (sections.contabil && sections.contabil.blocks && sections.contabil.blocks.length > 0) {
+      html += `
+        <div class="section">
+          <h2>Departamento Contábil</h2>
+      `;
+      
+      let hasContent = false;
+      
+      sections.contabil.blocks.forEach(block => {
+        if (block.title || block.content) {
+          hasContent = true;
+          html += `
+            <div class="block">
+              ${block.title ? `<h3>${block.title}</h3>` : ''}
+              ${block.content ? `<p>${block.content}</p>` : ''}
+              ${(block.assunto || block.responsavel) ? 
+                `<div class="meta">
+                  ${block.assunto ? `<span>Assunto: ${block.assunto}</span>` : ''}
+                  ${block.assunto && block.responsavel ? ' | ' : ''}
+                  ${block.responsavel ? `<span>Responsável: ${block.responsavel}</span>` : ''}
+                </div>` : ''}
+            </div>
+          `;
+        }
+      });
+      
+      if (!hasContent) {
+        html += `<div class="empty-block">Nenhuma informação cadastrada nesta seção.</div>`;
+      }
+      
+      html += `
+        ${sections.contabil.completed ? `<div class="section-footer">Seção concluída</div>` : ''}
+        </div>
+      `;
+    }
+    
+    html += `</div>`;
+  }
+
+  // Rodapé
+  html += `
+      <div class="footer">
+        <p>Documento gerado em ${new Date().toLocaleString('pt-BR')}</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return html;
+};
+
+/**
+ * Gera um arquivo ZIP contendo todos os PDFs gerados
+ * @returns {Promise<string>} Caminho do arquivo ZIP gerado
+ */
+const generateAllPDFsZip = async () => {
+  console.log('Gerando ZIP de todos os PDFs...');
+  
+  const zip = new AdmZip();
+  const formList = readFormList();
+  const zipFilePath = path.resolve(pdfDirectory, 'todos_relatorios.zip');
+  
+  // Adicionar todos os PDFs existentes ao ZIP
+  const pdfFiles = fs.readdirSync(pdfDirectory).filter(file => file.endsWith('.pdf'));
+  for (const pdfFile of pdfFiles) {
+    const pdfPath = path.resolve(pdfDirectory, pdfFile);
+    zip.addLocalFile(pdfPath);
+  }
+  
+  // Salvar o arquivo ZIP
+  zip.writeZip(zipFilePath);
+  
+  return zipFilePath;
+};
+
+// Rotas da API
+
+/**
+ * Obter a lista de todos os formulários
+ */
+app.get('/api/forms', (req, res) => {
+  try {
+    const formList = readFormList();
+    res.json(formList);
+  } catch (error) {
+    console.error('Erro ao obter lista de formulários:', error);
+    res.status(500).json({ error: 'Erro ao obter lista de formulários' });
+  }
+});
+
+/**
+ * Criar um novo formulário
+ */
+app.post('/api/forms', (req, res) => {
+  try {
+    const { empresa, local, data } = req.body;
+    
+    if (!empresa) {
+      return res.status(400).json({ error: 'O nome da empresa é obrigatório' });
+    }
+    
+    const formId = uuidv4();
+    const formList = readFormList();
+    
+    const newForm = {
+      id: formId,
+      empresa,
+      local: local || '',
+      data: data || new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString(),
+      pdfGerado: false
+    };
+    
+    formList.push(newForm);
+    saveFormList(formList);
+    
+    // Inicializar dados do formulário
+    const formData = readFormData(formId);
+    formData.headerData = {
+      empresa,
+      local: local || '',
+      data: data || new Date().toISOString().split('T')[0],
+      participantesEmpresa: '',
+      participantesContabilidade: 'Eli, Cataryna e William',
+    };
+    
+    if (req.body.formInfo) {
+      formData.formInfo = {
+        ...formData.formInfo,
+        ...req.body.formInfo,
+        nomeEmpresa: empresa
+      };
+    }
+    
+    saveFormData(formId, formData);
+    
+    res.status(201).json(newForm);
+  } catch (error) {
+    console.error('Erro ao criar formulário:', error);
+    res.status(500).json({ error: 'Erro ao criar formulário' });
+  }
+});
+
+/**
+ * Obter um formulário específico pelo ID
+ */
+app.get('/api/forms/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const formData = readFormData(id);
+    
+    if (!formData) {
+      return res.status(404).json({ error: 'Formulário não encontrado' });
+    }
+    
+    res.json(formData);
+  } catch (error) {
+    console.error(`Erro ao obter formulário ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Erro ao obter formulário' });
+  }
+});
+
+/**
+ * Atualizar um formulário específico pelo ID
+ */
+app.put('/api/forms/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const formList = readFormList();
+    const formIndex = formList.findIndex(form => form.id === id);
+    
+    if (formIndex === -1) {
+      return res.status(404).json({ error: 'Formulário não encontrado' });
+    }
+    
+    const formData = readFormData(id);
+    
+    // Atualizar dados do formulário
+    if (req.body.headerData) {
+      formData.headerData = {
+        ...formData.headerData,
+        ...req.body.headerData
+      };
+      
+      // Atualizar também a lista de formulários
+      if (req.body.headerData.empresa) {
+        formList[formIndex].empresa = req.body.headerData.empresa;
+      }
+      
+      if (req.body.headerData.local) {
+        formList[formIndex].local = req.body.headerData.local;
+      }
+      
+      if (req.body.headerData.data) {
+        formList[formIndex].data = req.body.headerData.data;
+      }
+    }
+    
+    if (req.body.sectionsList) {
+      formData.sectionsList = req.body.sectionsList;
+    }
+    
+    // Para compatibilidade com versão anterior
+    if (req.body.fiscal) {
+      formData.fiscal = req.body.fiscal;
+    }
+    
+    if (req.body.dp) {
+      formData.dp = req.body.dp;
+    }
+    
+    if (req.body.contabil) {
+      formData.contabil = req.body.contabil;
+    }
+    
+    if (req.body.formInfo) {
+      formData.formInfo = {
+        ...formData.formInfo,
+        ...req.body.formInfo
+      };
+    }
+    
+    // Atualizar campo pdfGerado se for fornecido
+    if (req.body.pdfGerado !== undefined) {
+      formData.pdfGerado = req.body.pdfGerado;
+      formList[formIndex].pdfGerado = req.body.pdfGerado;
+    }
+    
+    saveFormData(id, formData);
+    saveFormList(formList);
+    
+    res.json(formData);
+  } catch (error) {
+    console.error(`Erro ao atualizar formulário ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Erro ao atualizar formulário' });
+  }
+});
+
+/**
+ * Excluir um formulário específico pelo ID
+ */
+app.delete('/api/forms/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const formList = readFormList();
+    const formIndex = formList.findIndex(form => form.id === id);
+    
+    if (formIndex === -1) {
+      return res.status(404).json({ error: 'Formulário não encontrado' });
+    }
+    
+    // Remover da lista
+    formList.splice(formIndex, 1);
+    saveFormList(formList);
+    
+    // Remover arquivo de dados do formulário
+    const formFilePath = path.resolve(formsDirectory, `${id}.json`);
+    if (fs.existsSync(formFilePath)) {
+      fs.unlinkSync(formFilePath);
+    }
+    
+    // Remover arquivo PDF se existir
+    const pdfFilePath = path.resolve(pdfDirectory, `relatorio_${id}.pdf`);
+    if (fs.existsSync(pdfFilePath)) {
+      fs.unlinkSync(pdfFilePath);
+    }
+    
+    res.json({ success: true, message: 'Formulário excluído com sucesso' });
+  } catch (error) {
+    console.error(`Erro ao excluir formulário ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Erro ao excluir formulário' });
+  }
+});
+
+/**
+ * Gerar PDF para um formulário específico
+ */
+app.post('/api/forms/:id/pdf', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const formData = readFormData(id);
+    
+    if (!formData) {
+      return res.status(404).json({ error: 'Formulário não encontrado' });
+    }
+    
+    const pdfFilePath = path.resolve(pdfDirectory, `relatorio_${id}.pdf`);
+    
+    // Gerar o PDF
+    await generatePDF(formData, formData.headerData, pdfFilePath);
+    
+    // Marcar o PDF como gerado
+    formData.pdfGerado = true;
+    saveFormData(id, formData);
+    
+    // Atualizar a lista de formulários
+    const formList = readFormList();
+    const formIndex = formList.findIndex(form => form.id === id);
+    if (formIndex !== -1) {
+      formList[formIndex].pdfGerado = true;
+      saveFormList(formList);
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'PDF gerado com sucesso',
+      pdfUrl: `/api/forms/${id}/pdf/download`
+    });
+  } catch (error) {
+    console.error(`Erro ao gerar PDF para o formulário ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Erro ao gerar PDF' });
+  }
+});
+
+/**
+ * Download do PDF de um formulário específico
+ */
+app.get('/api/forms/:id/pdf/download', (req, res) => {
+  try {
+    const { id } = req.params;
+    const pdfFilePath = path.resolve(pdfDirectory, `relatorio_${id}.pdf`);
+    
+    if (!fs.existsSync(pdfFilePath)) {
+      return res.status(404).json({ error: 'PDF não encontrado. Gere o PDF primeiro.' });
+    }
+    
+    // Obter informações do formulário para o nome do arquivo
+    const formList = readFormList();
+    const form = formList.find(f => f.id === id);
+    const empresa = form ? form.empresa : 'Empresa';
+    
+    // Nome do arquivo para download
+    const fileName = `Relatorio_${empresa.replace(/\s+/g, '_')}.pdf`;
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    
+    const fileStream = fs.createReadStream(pdfFilePath);
+    fileStream.pipe(res);
+  } catch (error) {
+    console.error(`Erro ao baixar PDF do formulário ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Erro ao baixar PDF' });
+  }
+});
+
+/**
+ * Gerar ZIP com todos os PDFs
+ */
+app.get('/api/forms/pdf/download-all', async (req, res) => {
+  try {
+    // Gerar ZIP com todos os PDFs
+    const zipFilePath = await generateAllPDFsZip();
+    
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="todos_relatorios.zip"');
+    
+    const fileStream = fs.createReadStream(zipFilePath);
+    fileStream.pipe(res);
+  } catch (error) {
+    console.error('Erro ao gerar ZIP com todos os PDFs:', error);
+    res.status(500).json({ error: 'Erro ao gerar ZIP com todos os PDFs' });
+  }
+});
+
+/**
+ * Adicionar nova seção a um formulário
+ */
+app.post('/api/forms/:id/sections', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, title } = req.body;
+    
+    if (!type) {
+      return res.status(400).json({ error: 'O tipo da seção é obrigatório' });
+    }
+    
+    const formData = readFormData(id);
+    
+    if (!formData) {
+      return res.status(404).json({ error: 'Formulário não encontrado' });
+    }
+    
+    // Garantir que sectionsList existe
+    if (!formData.sectionsList) {
+      formData.sectionsList = [];
+    }
+    
+    // Adicionar nova seção
+    const newSection = {
+      type,
+      title: title || sectionTitles[type] || type,
+      blocks: [{ title: '', content: '', assunto: '', responsavel: '' }],
+      completed: false
+    };
+    
+    formData.sectionsList.push(newSection);
+    saveFormData(id, formData);
+    
+    res.status(201).json(newSection);
+  } catch (error) {
+    console.error(`Erro ao adicionar seção ao formulário ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Erro ao adicionar seção' });
+  }
+});
+
+/**
+ * Remover uma seção de um formulário
+ */
+app.delete('/api/forms/:id/sections/:index', (req, res) => {
+  try {
+    const { id, index } = req.params;
+    const sectionIndex = parseInt(index, 10);
+    
+    if (isNaN(sectionIndex)) {
+      return res.status(400).json({ error: 'Índice de seção inválido' });
+    }
+    
+    const formData = readFormData(id);
+    
+    if (!formData || !formData.sectionsList) {
+      return res.status(404).json({ error: 'Formulário ou seções não encontrados' });
+    }
+    
+    if (sectionIndex < 0 || sectionIndex >= formData.sectionsList.length) {
+      return res.status(404).json({ error: 'Seção não encontrada' });
+    }
+    
+    // Remover a seção
+    formData.sectionsList.splice(sectionIndex, 1);
+    saveFormData(id, formData);
+    
+    res.json({ success: true, message: 'Seção removida com sucesso' });
+  } catch (error) {
+    console.error(`Erro ao remover seção do formulário ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Erro ao remover seção' });
+  }
+});
+
+/**
+ * Adicionar um bloco a uma seção
+ */
+app.post('/api/forms/:id/sections/:index/blocks', (req, res) => {
+  try {
+    const { id, index } = req.params;
+    const sectionIndex = parseInt(index, 10);
+    
+    if (isNaN(sectionIndex)) {
+      return res.status(400).json({ error: 'Índice de seção inválido' });
+    }
+    
+    const formData = readFormData(id);
+    
+    if (!formData || !formData.sectionsList) {
+      return res.status(404).json({ error: 'Formulário ou seções não encontrados' });
+    }
+    
+    if (sectionIndex < 0 || sectionIndex >= formData.sectionsList.length) {
+      return res.status(404).json({ error: 'Seção não encontrada' });
+    }
+    
+    // Adicionar novo bloco à seção
+    const newBlock = {
+      title: '',
+      content: '',
+      assunto: '',
+      responsavel: ''
+    };
+    
+    formData.sectionsList[sectionIndex].blocks.push(newBlock);
+    saveFormData(id, formData);
+    
+    res.status(201).json(newBlock);
+  } catch (error) {
+    console.error(`Erro ao adicionar bloco à seção do formulário ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Erro ao adicionar bloco' });
+  }
+});
+
+/**
+ * Remover um bloco de uma seção
+ */
+app.delete('/api/forms/:id/sections/:sectionIndex/blocks/:blockIndex', (req, res) => {
+  try {
+    const { id, sectionIndex, blockIndex } = req.params;
+    const secIndex = parseInt(sectionIndex, 10);
+    const blkIndex = parseInt(blockIndex, 10);
+    
+    if (isNaN(secIndex) || isNaN(blkIndex)) {
+      return res.status(400).json({ error: 'Índices inválidos' });
+    }
+    
+    const formData = readFormData(id);
+    
+    if (!formData || !formData.sectionsList) {
+      return res.status(404).json({ error: 'Formulário ou seções não encontrados' });
+    }
+    
+    if (secIndex < 0 || secIndex >= formData.sectionsList.length) {
+      return res.status(404).json({ error: 'Seção não encontrada' });
+    }
+    
+    const section = formData.sectionsList[secIndex];
+    
+    if (blkIndex < 0 || blkIndex >= section.blocks.length) {
+      return res.status(404).json({ error: 'Bloco não encontrado' });
+    }
+    
+    // Remover o bloco
+    section.blocks.splice(blkIndex, 1);
+    
+    // Se não houver mais blocos, adicionar um vazio
+    if (section.blocks.length === 0) {
+      section.blocks.push({ title: '', content: '', assunto: '', responsavel: '' });
+    }
+    
+    saveFormData(id, formData);
+    
+    res.json({ success: true, message: 'Bloco removido com sucesso' });
+  } catch (error) {
+    console.error(`Erro ao remover bloco do formulário ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Erro ao remover bloco' });
+  }
+});
+
+/**
+ * Servidor escutando
+ */
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});

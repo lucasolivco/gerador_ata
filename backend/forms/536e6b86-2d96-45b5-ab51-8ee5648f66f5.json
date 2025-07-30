@@ -1,0 +1,139 @@
+{
+  "sectionsList": [
+    {
+      "type": "fiscal",
+      "title": "Fiscal",
+      "blocks": [
+        {
+          "title": "Alíquota do Simples Nacional",
+          "content": "<p>Receita Bruta (12 meses) Alíquota Inicial Até R$ 180 mil 6,00% De R$ 180 mil a R$ 360 mil 11,20% De R$ 360 mil a R$ 720 mil 13,50% De R$ 720 mil a R$ 1,8 milhão 16,00% De R$ 1,8 a R$ 3,6 milhões 21,00% De R$ 3,6 a R$ 4,8 milhões 33,00%</p>",
+          "assunto": "Regime Tributário",
+          "responsavel": "Fabiana"
+        }
+      ],
+      "completed": false
+    },
+    {
+      "type": "pessoal",
+      "title": "Pessoal",
+      "blocks": [
+        {
+          "title": "Pro Labore",
+          "content": "<p>É a <strong>remuneração mensal paga aos sócios-administradores</strong> da empresa pelo trabalho que realizam, <strong>sem vínculo empregatício</strong> (não é salário, mas tem natureza remuneratória).</p>",
+          "assunto": "Folha do Sócio",
+          "responsavel": "Laís"
+        }
+      ],
+      "completed": false
+    },
+    {
+      "type": "contabil",
+      "title": "Contábil",
+      "blocks": [
+        {
+          "title": "Fechamento balanço anteiror",
+          "content": "<p>O <strong>Balanço Patrimonial</strong> é uma <strong>demonstração contábil obrigatória</strong> que apresenta, de forma estruturada, a <strong>posição financeira e patrimonial de uma empresa</strong> em determinada data — geralmente no <strong>último dia do ano</strong> (31/12) ou de um trimestre/mês.</p>",
+          "assunto": "Balanço",
+          "responsavel": "William"
+        }
+      ],
+      "completed": true
+    }
+  ],
+  "fiscal": {
+    "blocks": [
+      {
+        "title": "Alíquota do Simples Nacional",
+        "content": "<p>Receita Bruta (12 meses) Alíquota Inicial Até R$ 180 mil 6,00% De R$ 180 mil a R$ 360 mil 11,20% De R$ 360 mil a R$ 720 mil 13,50% De R$ 720 mil a R$ 1,8 milhão 16,00% De R$ 1,8 a R$ 3,6 milhões 21,00% De R$ 3,6 a R$ 4,8 milhões 33,00%</p>",
+        "assunto": "Regime Tributário",
+        "responsavel": "Fabiana"
+      }
+    ],
+    "completed": false
+  },
+  "dp": {
+    "blocks": [
+      {
+        "title": "Pro Labore",
+        "content": "<p>É a <strong>remuneração mensal paga aos sócios-administradores</strong> da empresa pelo trabalho que realizam, <strong>sem vínculo empregatício</strong> (não é salário, mas tem natureza remuneratória).</p>",
+        "assunto": "Folha do Sócio",
+        "responsavel": "Laís"
+      }
+    ],
+    "completed": false
+  },
+  "contabil": {
+    "blocks": [
+      {
+        "title": "Fechamento balanço anteiror",
+        "content": "<p>O <strong>Balanço Patrimonial</strong> é uma <strong>demonstração contábil obrigatória</strong> que apresenta, de forma estruturada, a <strong>posição financeira e patrimonial de uma empresa</strong> em determinada data — geralmente no <strong>último dia do ano</strong> (31/12) ou de um trimestre/mês.</p>",
+        "assunto": "Balanço",
+        "responsavel": "William"
+      }
+    ],
+    "completed": true
+  },
+  "headerData": {
+    "empresa": "CANELLA & SANTOS CONTABILIDADE",
+    "local": "Volta Redonda, RJ",
+    "data": "2025-07-08",
+    "participantesEmpresa": "Levi Carvalho Canella",
+    "participantesContabilidade": "Eli, Cataryna e William"
+  },
+  "pdfGerado": true,
+  "formInfo": {
+    "nomeEmpresa": "CANELLA & SANTOS CONTABILIDADE",
+    "cnpj": "06310711000149",
+    "endereco": "Avenida Sávio Cota de Almeida Gama",
+    "setorAtuacao": "Serviço",
+    "porteEmpresa": "Microempresa",
+    "numeroFuncionarios": "32",
+    "funcionarioIntermediario": "0",
+    "departamentos": [
+      "Fiscal",
+      "Pessoal",
+      "Contábil"
+    ],
+    "razoesParaMudanca": [
+      "Necessidade de mais serviços",
+      "Melhor custo-benefício"
+    ],
+    "outrosMotivos": "",
+    "expectativas": "Que me atenda de forma pronta, sem demora.",
+    "servicosAnteriores": [
+      "Folha de pagamento",
+      "Fiscal",
+      "Contábil",
+      "Outros"
+    ],
+    "outrosServicos": "Financeiro",
+    "escritorioContabilAnterior": "Fulano contabilidade Ltda",
+    "estadoDocumentos": "Em atraso",
+    "responsavelDocumentosNome": "LEVI C CANELLA",
+    "responsavelDocumentosCargo": "Gestor",
+    "pendenciasRelatorios": "Débito com Simples Nacional do mês 05/2025;\nDébito com Darf Previdenciário do mês 05/2025;",
+    "temBalancoFechado": "Não",
+    "temParcelamentos": "Sim",
+    "parcelamentosDetalhes": [
+      "Parcelamento Simples Nacional Simplificado 72x"
+    ],
+    "necessidadeControleCND": "Estadual, Federal, Trabalhista e Fiscal",
+    "emiteNF": "Sim",
+    "quantidadeNotas": "66",
+    "mediaFaturamento": "102000",
+    "temSistemaEmissao": "Não",
+    "qualSistemaEmissao": "",
+    "regimeTributario": "Simples Nacional",
+    "preferenciaComunicacao": [
+      "Grupo WhatsApp",
+      "Telefone",
+      "Onvio"
+    ],
+    "observacoesGerais": "Empresa está quebrando, será necessário uma atenção maior.",
+    "email": "fiscal@canellaesantos.com.br",
+    "telefone": "2433468533",
+    "whatsapp": "24999212350",
+    "outrosContatos": "Whatsapp",
+    "responsavel": "Ana Caroline"
+  }
+}

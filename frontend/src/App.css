@@ -1,0 +1,840 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+/* Variáveis para o modo claro */
+:root {
+  --background-color: #f4f7fd;
+  --header-background: #f8f9fa; /* Fundo do cabeçalho */
+  --header-text-color: #333; /* Cor do texto do cabeçalho */
+  --header-border-color: #ddd; /* Cor da borda do cabeçalho */
+  --text-color: #000000;
+  --card-background: #f8f9fa;
+  --card-border: #ddd;
+  --button-background: #4837e7;
+  --button-hover: #3e2fc7;
+  --input-background: #ffffff;
+  --input-border: #ddd;
+  --input-text-color: #000000;
+  --card-header-background: #f8f9fa;
+  --card-header-text-color: #333;
+  --card-completed-background: #bbd3c2;
+  --placeholder-color: #807b7b;
+}
+
+/* Variáveis para o modo escuro */
+.dark-mode {
+  --background-color: #232327; /* Fundo escuro */
+  --header-background: #2d2d2d; /* Fundo do cabeçalho */
+  --header-text-color: #ffffff; /* Cor do texto do cabeçalho */
+  --header-border-color: #444; /* Cor da borda do cabeçalho */
+  --text-color: #ffffff; /* Texto branco */
+  --card-background: #2d2d2d; /* Fundo cinza escuro para cards */
+  --card-border: #444; /* Borda cinza escura */
+  --button-background: #4837e7; /* Botão cinza escuro */
+  --button-hover: #3e2fc7; /* Botão cinza mais claro no hover */
+  --input-background: #444; /* Fundo cinza para inputs */
+  --input-border: #555; /* Borda cinza para inputs */
+  --input-text-color: #ffffff; /* Texto branco para inputs */
+  --card-header-background: #2d2d2d; /* Fundo cinza escuro para o header do card */
+  --card-header-text-color: #ffffff; /* Texto branco para o header do card */
+  --card-completed-background: #333;
+  --placeholder-color: #ada6a6;
+}
+
+/* Estilo para o cabeçalho */
+.header {
+  background-color: var(--card-background); /* Usa a cor de fundo do card */
+  color: var(--text-color); /* Usa a cor do texto do tema */
+  border: 1px solid var(--card-border); /* Usa a cor da borda do card */
+  border-radius: 10px; /* Borda arredondada */
+  padding: 20px; /* Espaçamento interno */
+  margin-bottom: 20px; /* Espaçamento abaixo do cabeçalho */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Transição suave */
+}
+
+.header p {
+  margin: 5px 0; /* Espaçamento entre parágrafos */
+  font-size: 1rem; /* Tamanho da fonte */
+  color: var(--text-color); /* Usa a cor do texto do tema */
+}
+
+.header strong {
+  font-weight: 600; /* Texto em negrito */
+}
+
+/* Estilos globais */
+/* Aplicar o background-color ao body */
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.custom-input {
+  color: var(--input-text-color) !important; /* Força a cor a ser branca, mesmo que outras regras tentem sobrescrever */
+}
+
+
+/* Estilo para o placeholder no Dark Mode */
+.custom-input::placeholder {
+  color: var(--placeholder-color);
+}
+
+/* Estilo para o título do formulário */
+.form-title {
+  font-family: 'Montserrat', sans-serif; /* Fonte moderna */
+  font-size: 2rem; /* Tamanho grande */
+  font-weight: 600; /* Peso da fonte (negrito) */
+  color: var(--text-color); /* Cor do texto (ajusta automaticamente ao tema) */
+  text-align: center; /* Centralizado */
+  margin-bottom: 1.5rem; /* Espaçamento abaixo do título */
+  letter-spacing: -0.05em; /* Espaçamento entre letras sutil */
+  position: relative; /* Para adicionar um sublinhado */
+}
+
+/* Efeito de sublinhado sutil */
+.form-title::after {
+  content: '';
+  display: block;
+  width: 60px; /* Largura do sublinhado */
+  height: 3px; /* Espessura do sublinhado */
+  background-color: #4f2ceb; /* Cor do sublinhado (azul) */
+  margin: 0.5rem auto 0; /* Centraliza o sublinhado */
+  transition: width 0.3s ease; /* Animação suave */
+}
+
+/* Efeito de hover no sublinhado 
+.form-title:hover::after {
+  width: 100px; /* Aumenta a largura ao passar o mouse 
+}*/
+
+/* Botão de alternância */
+.dark-mode-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  z-index: 1000;
+}
+
+/* Estilo para o Card */
+.custom-card {
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  margin-bottom: 20px;
+  background-color: var(--card-background);
+}
+
+/* Estilo para o Card Header */
+.custom-card .card-header {
+  background-color: var(--card-header-background);
+  border-bottom: 1px solid var(--card-border);
+  border-radius: 10px 10px 0 0;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.custom-card .card-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--card-header-text-color);
+}
+
+/* Estilo para os Botões */
+.custom-button {
+  border-radius: 25px;
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.custom-button:hover {
+  transform: scale(1.05);
+}
+
+.custom-button:active {
+  transform: scale(0.95);
+}
+
+/* Botão Adicionar Bloco */
+.btn-primary.custom-button {
+  background-color: #4837e7;
+  border: none;
+}
+
+.btn-primary.custom-button:hover {
+  background-color: #3e2fc7;
+}
+
+/* Botão Editar Seção */
+.btn-warning.custom-button {
+  background-color: #eec23d;
+  border: none;
+}
+
+.btn-warning.custom-button:hover {
+  background-color: #ca9e18;
+}
+
+/* Botão Excluir Bloco */
+.btn-danger.custom-button {
+  background-color: #d33948;
+  border: none;
+}
+
+.btn-danger.custom-button:hover {
+  background-color: #9b2b36;
+}
+
+/* Botão Finalizar Seção */
+.btn-outline-success.custom-button {
+  border-color: #28a745;
+  color: white;
+}
+
+.btn-outline-success.custom-button:hover {
+  background-color: #28a745;
+  color: white;
+}
+
+/* Estilo para os Inputs e Textareas */
+.custom-input {
+  border-radius: 5px;
+  border: 1px solid var(--input-border);
+  padding: 10px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  background-color: var(--input-background);
+  color: var(--input-text-color);
+}
+
+.custom-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  outline: none;
+  background-color: var(--input-background);
+}
+
+.dark-mode .custom-input:disabled {
+  background-color: var(--input-background);
+  color: var(--input-text-color);
+  opacity: 1; /* Importante: remove o efeito 'apagado' */
+}
+
+/* Estilo para as Rows e Cols */
+.custom-row {
+  margin-bottom: 15px;
+}
+
+.custom-col {
+  padding: 0 10px;
+}
+
+/* Estilo para seções concluídas */
+.custom-card.completed {
+  border-color: #28a745;
+}
+
+/* Estilo para o modal no modo escuro */
+.dark-mode .modal-content {
+  background-color: #2d2d2d;
+  color: #ffffff;
+}
+
+.dark-mode .modal-header {
+  border-bottom: 1px solid #444;
+}
+
+.dark-mode .modal-footer {
+  border-top: 1px solid #444;
+}
+
+.dark-mode .close {
+  color: #ffffff;
+}
+
+.custom-row .fa-times {
+  color: #dc3545;
+  font-size: 1.2rem;
+  transition: color 0.3s ease;
+}
+
+.custom-row .fa-times:hover {
+  color: #c82333;
+}
+
+/* Estilos para o ReactQuill no modo escuro */
+.dark-mode .ql-toolbar {
+  background-color: var(--card-background);
+  border-color: var(--card-border) !important;
+}
+
+.dark-mode .ql-container {
+  background-color: var(--input-background);
+  border-color: var(--card-border) !important;
+}
+
+.dark-mode .ql-editor {
+  color: var(--input-text-color);
+  background-color: var(--input-background);
+}
+
+.dark-mode .ql-snow .ql-stroke {
+  stroke: var(--input-text-color);
+}
+
+.dark-mode .ql-snow .ql-fill {
+  fill: var(--input-text-color);
+}
+
+.dark-mode .ql-snow .ql-picker {
+  color: var(--input-text-color);
+}
+
+.dark-mode .ql-snow .ql-picker-options {
+  background-color: var(--card-background);
+  border-color: var(--card-border);
+}
+
+.dark-mode .ql-snow .ql-picker-item {
+  color: var(--input-text-color);
+}
+
+.dark-mode .ql-snow .ql-picker-label {
+  color: var(--input-text-color);
+}
+
+.spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-width: 0.2em;
+  vertical-align: middle;
+}
+
+/* Estilos para a lista de formulários */
+.form-list-item {
+  background-color: var(--card-background) !important;
+  border: 1px solid var(--card-border) !important;
+  color: var(--text-color) !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  border-radius: 8px !important;
+  margin-bottom: 12px !important;
+  padding: 16px !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.form-list-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--button-hover) !important;
+}
+
+.form-list-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background-color: var(--button-background);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.form-list-item:hover::before {
+  opacity: 1;
+}
+
+.form-list-item span {
+  font-weight: 600;
+  color: var(--text-color);
+  transition: color 0.3s ease;
+}
+
+/* Ajustes para o botão na lista */
+.form-list-item .btn {
+  color: var(--text-color);
+  border: 1px solid var(--button-background);
+  background-color: transparent;
+  transition: all 0.3s ease;
+}
+
+.form-list-item .btn:hover {
+  background-color: var(--button-background);
+  color: white;
+}
+
+.delete-form-btn {
+  border-color: red !important;
+  color: red !important;
+}
+
+.delete-form-btn:hover {
+  background-color: red !important;
+  color: white !important;
+  border-color: red !important;
+}
+
+/* Botão de voltar */
+.back-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  padding: 10px 15px;
+  border-radius: 50%;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-button:hover {
+  color: var(--text-color);
+}
+
+/* Ajustes nos ícones dos botões */
+.custom-button svg {
+  margin-right: 0;
+  transition: transform 0.2s ease;
+}
+
+.custom-button:hover svg {
+  transform: scale(1.1);
+}
+
+/* Tamanho consistente para ícones */
+.btn-danger.custom-button svg,
+.btn-success.custom-button svg,
+.btn-warning.custom-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* No seu arquivo App.css */
+.ql-editor ul, .ql-editor ol {
+  padding-left: 2em;
+}
+
+.ql-editor li:not(.ql-direction-rtl) {
+  padding-left: 1.5em;
+}
+
+.assunto-label {
+  color: var(--text-color);
+}
+
+/* Estilos para o Modal de Perfil do Cliente */
+.modal-content {
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Estilo para modo claro - já tem alguns valores definidos, mas vamos complementar */
+.modal-content {
+  background-color: var(--card-background);
+  color: var(--text-color);
+}
+
+.modal-header {
+  background-color: var(--card-header-background);
+  border-bottom: 1px solid var(--card-border);
+  border-radius: 10px 10px 0 0;
+  padding: 15px 20px;
+}
+
+.modal-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  color: var(--card-header-text-color);
+}
+
+.modal-footer {
+  background-color: var(--card-header-background);
+  border-top: 1px solid var(--card-border);
+  border-radius: 0 0 10px 10px;
+  padding: 15px 20px;
+}
+
+/* Estilos para inputs, selects e checkboxes dentro do modal */
+.modal .form-control,
+.modal .form-select {
+  background-color: var(--input-background);
+  color: var(--input-text-color);
+  border: 1px solid var(--input-border);
+  border-radius: 5px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.modal .form-control:focus,
+.modal .form-select:focus {
+  border-color: #4837e7;
+  box-shadow: 0 0 5px rgba(72, 55, 231, 0.5);
+  outline: none;
+}
+
+.modal .form-control::placeholder {
+  color: var(--placeholder-color);
+}
+
+.modal .form-check-input {
+  background-color: var(--input-background);
+  border: 1px solid var(--input-border);
+}
+
+.modal .form-check-input:checked {
+  background-color: #4837e7;
+  border-color: #4837e7;
+}
+
+.modal .form-label,
+.modal .form-check-label {
+  color: var(--text-color);
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Estilos para títulos dentro do modal */
+.modal h4 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  position: relative;
+  padding-left: 12px;
+}
+
+.modal h4::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background-color: #4837e7;
+  border-radius: 2px;
+}
+
+/* Estilos para botões no modal */
+.modal .btn-primary {
+  background-color: var(--button-background);
+  border: none;
+  border-radius: 25px;
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.modal .btn-secondary {
+  background-color: transparent;
+  border: 1px solid var(--card-border);
+  color: var(--text-color);
+  border-radius: 25px;
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.modal .btn-primary:hover,
+.modal .btn-secondary:hover {
+  transform: scale(1.05);
+}
+
+.modal .btn-primary:hover {
+  background-color: var(--button-hover);
+}
+
+.modal .btn-secondary:hover {
+  background-color: rgba(72, 55, 231, 0.1);
+}
+
+/* Estilização do botão de fechamento do modal */
+.modal .btn-close {
+  opacity: 0.8;
+  transition: opacity 0.3s ease, transform 0.2s ease;
+}
+
+.modal .btn-close:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.dark-mode .modal .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Animação suave para abrir o modal */
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+  transform: none;
+}
+
+/* Estilos específicos para o conteúdo interno do formulário */
+.modal textarea.form-control {
+  min-height: 100px;
+}
+
+.modal .form-check {
+  margin-bottom: 0.5rem;
+}
+
+/* Ajustes de espaçamento para os grupos de formulário */
+.modal .form-group {
+  margin-bottom: 1rem;
+}
+
+/* Ajuste para inputs quando desabilitados */
+.modal .form-control:disabled,
+.modal .form-select:disabled {
+  background-color: var(--input-background);
+  opacity: 0.7;
+}
+
+.dark-mode .modal .form-control:disabled,
+.dark-mode .modal .form-select:disabled {
+  background-color: var(--input-background);
+  color: var(--input-text-color);
+  opacity: 0.7;
+}
+
+/* Melhor espaçamento para radio buttons */
+.form-check {
+  margin-bottom: 0.5rem;
+}
+
+/* Área de texto para pendências */
+textarea[rows="3"] {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Estilos para o modo somente leitura do formulário */
+.readonly-form input,
+.readonly-form select,
+.readonly-form textarea,
+.readonly-form .form-check-input,
+.readonly-form .custom-input,
+.readonly-form button:not(.btn-secondary),
+.readonly-form .quill {
+  pointer-events: none !important;
+  background-color: #f8f9fa !important;
+  opacity: 0.95 !important; /* Aumentado para melhor visibilidade */
+  color: #333 !important; /* Texto mais escuro para melhor contraste */
+  border-color: #ced4da !important; /* Manter a borda visível */
+}
+
+/* Melhorar a visibilidade dos campos selecionados */
+.readonly-form .form-check-input:checked {
+  background-color: #0d6efd !important;
+  opacity: 1 !important;
+}
+
+/* Ocultar botões de ação internos quando em modo somente leitura */
+.readonly-form .btn-success,
+.readonly-form .btn-danger,
+.readonly-form .btn-primary:not(.modal-footer .btn-primary) {
+  display: none !important;
+}
+
+/* Estilo específico para o conteúdo do editor Quill no modo somente leitura */
+.readonly-form .quill .ql-editor {
+  background-color: #f8f9fa !important;
+  color: #333 !important;
+}
+
+/* Estilos para o campo de busca */
+.input-group {
+  transition: all 0.3s ease;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+/* Estilo para o ícone de busca */
+.input-group-text {
+  background-color: var(--input-background);
+  color: var(--text-color);
+  border: 1px solid var(--input-border);
+  border-right: none;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Estilo para o campo de entrada de texto na busca */
+.input-group .form-control {
+  background-color: var(--input-background);
+  color: var(--input-text-color);
+  border: 1px solid var(--input-border);
+  border-left: none;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Estilo para o placeholder no campo de busca */
+.input-group .form-control::placeholder {
+  color: var(--placeholder-color);
+  opacity: 0.8;
+}
+
+/* Efeito de hover no campo de busca */
+.input-group:hover .input-group-text,
+.input-group:hover .form-control {
+  border-color: var(--button-background);
+}
+
+/* Efeito de foco no campo de busca */
+.input-group:focus-within .input-group-text,
+.input-group:focus-within .form-control {
+  border-color: var(--button-background);
+  box-shadow: 0.2rem 0.2rem 0.2rem 0.2rem rgba(72, 55, 231, 0.25);
+}
+
+/* Estilo específico para modo escuro */
+.dark-mode .input-group-text,
+.dark-mode .input-group .form-control {
+  background-color: var(--input-background);
+  color: var(--input-text-color);
+}
+
+/* Estilos para a paginação */
+.pagination {
+  margin-top: 1rem;
+  display: flex;
+  gap: 5px;
+}
+
+/* Estilo base para todos os itens de paginação */
+.pagination .page-item .page-link {
+  background-color: var(--card-background);
+  color: var(--text-color);
+  border: 1px solid var(--card-border);
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.9rem;
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Estado de hover para os itens de paginação */
+.pagination .page-item .page-link:hover:not(.disabled) {
+  background-color: var(--button-background);
+  color: white;
+  border-color: var(--button-background);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilo para o item ativo (página atual) */
+.pagination .page-item.active .page-link {
+  background-color: var(--button-background);
+  color: white;
+  border-color: var(--button-background);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+}
+
+/* Estilo para os itens desabilitados */
+.pagination .page-item.disabled .page-link {
+  background-color: var(--card-background);
+  color: var(--placeholder-color);
+  border-color: var(--card-border);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Estilo específico para os botões de navegação (Prev, Next, First, Last) */
+.pagination .page-item:first-child .page-link,
+.pagination .page-item:last-child .page-link {
+  padding: 0 12px;
+}
+
+/* Efeito de clique */
+.pagination .page-item .page-link:active {
+  transform: scale(0.95);
+}
+
+/* Remover outline ao focar (mantendo a acessibilidade) */
+.pagination .page-item .page-link:focus {
+  box-shadow: 0 0 0 0.2rem rgba(72, 55, 231, 0.25);
+  outline: none;
+}
+
+/* Estilo específico para modo escuro */
+.dark-mode .pagination .page-item .page-link {
+  background-color: var(--card-background);
+  color: var(--text-color);
+  border-color: var(--card-border);
+}
+
+.dark-mode .pagination .page-item.active .page-link {
+  background-color: var(--button-background);
+  color: white;
+  border-color: var(--button-background);
+}
+
+.dark-mode .pagination .page-item.disabled .page-link {
+  opacity: 0.5;
+}
+
+.text-muted {
+  color: rgb(238, 48, 48) !important;
+}
+
+/* Estilos para campos redimensionáveis */
+.quill {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+/* Importante: Tornar o container redimensionável */
+.quill .ql-container {
+  resize: vertical !important;
+  min-height: 150px;
+  height: auto !important; /* Importante para permitir redimensionamento */
+  border-bottom-right-radius: 5px;
+}
+
+/* Certificar que o editor dentro do container ajusta-se automaticamente */
+.quill .ql-editor {
+  min-height: 140px;
+  height: 100%;
+}
+
+/* Estilo para o modo escuro */
+.dark-mode .quill .ql-container::before {
+  border-right: 2px solid var(--input-border);
+  border-bottom: 2px solid var(--input-border);
+}
+
+/* Certifique-se que a barra de ferramentas fique no topo */
+.quill .ql-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--card-background);
+}
+
+/* Textareas normais também devem ser redimensionáveis */
+textarea.form-control {
+  resize: vertical !important;
+  min-height: 100px;
+}
+
+
+
+

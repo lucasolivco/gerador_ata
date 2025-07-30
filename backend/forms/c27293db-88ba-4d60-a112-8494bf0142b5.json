@@ -1,0 +1,127 @@
+{
+  "sectionsList": [
+    {
+      "type": "fiscal",
+      "title": "Fiscal",
+      "blocks": [
+        {
+          "title": "",
+          "content": "",
+          "assunto": "",
+          "responsavel": ""
+        }
+      ],
+      "completed": false
+    },
+    {
+      "type": "pessoal",
+      "title": "Pessoal",
+      "blocks": [
+        {
+          "title": "",
+          "content": "",
+          "assunto": "",
+          "responsavel": ""
+        }
+      ],
+      "completed": false
+    },
+    {
+      "type": "contabil",
+      "title": "Contábil",
+      "blocks": [
+        {
+          "title": "",
+          "content": "",
+          "assunto": "",
+          "responsavel": ""
+        }
+      ],
+      "completed": false
+    }
+  ],
+  "fiscal": {
+    "blocks": [
+      {
+        "title": "",
+        "content": "",
+        "assunto": "",
+        "responsavel": ""
+      }
+    ],
+    "completed": false
+  },
+  "dp": {
+    "blocks": [
+      {
+        "title": "",
+        "content": "",
+        "assunto": "",
+        "responsavel": ""
+      }
+    ],
+    "completed": false
+  },
+  "contabil": {
+    "blocks": [
+      {
+        "title": "",
+        "content": "",
+        "assunto": "",
+        "responsavel": ""
+      }
+    ],
+    "completed": false
+  },
+  "headerData": {
+    "empresa": "TESTE",
+    "local": "VOLTA REDONDA",
+    "data": "2025-07-08",
+    "participantesEmpresa": "CAROL",
+    "participantesContabilidade": "CAROL"
+  },
+  "pdfGerado": false,
+  "formInfo": {
+    "nomeEmpresa": "",
+    "cnpj": "",
+    "endereco": "",
+    "setorAtuacao": "",
+    "porteEmpresa": "",
+    "numeroFuncionarios": "",
+    "funcionarioIntermediario": "",
+    "departamentos": [
+      "",
+      "",
+      ""
+    ],
+    "razoesParaMudanca": [],
+    "outrosMotivos": "",
+    "expectativas": "",
+    "servicosAnteriores": [],
+    "outrosServicos": "",
+    "escritorioContabilAnterior": "",
+    "estadoDocumentos": "",
+    "responsavelDocumentosNome": "",
+    "responsavelDocumentosCargo": "",
+    "pendenciasRelatorios": "",
+    "temBalancoFechado": "",
+    "temParcelamentos": "",
+    "parcelamentosDetalhes": [
+      ""
+    ],
+    "necessidadeControleCND": "",
+    "emiteNF": "",
+    "quantidadeNotas": "",
+    "mediaFaturamento": "",
+    "temSistemaEmissao": "",
+    "qualSistemaEmissao": "",
+    "regimeTributario": "",
+    "preferenciaComunicacao": [],
+    "observacoesGerais": "",
+    "email": "",
+    "telefone": "",
+    "whatsapp": "",
+    "outrosContatos": "",
+    "responsavel": ""
+  }
+}
